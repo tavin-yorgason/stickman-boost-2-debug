@@ -1,0 +1,264 @@
+cr.plugins_.IDNet = function(runtime) {
+	this.runtime = runtime;
+};
+(function() {
+	var pluginProto = cr.plugins_.IDNet.prototype;
+	pluginProto.Type = function(plugin) {
+		this.plugin = plugin;
+		this.runtime = plugin.runtime;
+	};
+	var typeProto = pluginProto.Type.prototype;
+	var _document = null;
+	var _unsafeWindow = null;
+	var idNetRuntime = null;
+	var idNetInst = null;
+	var idnetUserName = "Guest";
+	var authorized = false;
+	var userAuthorized = false;
+	var idnetSessionKey = "";
+	var onlineSavesData = "";
+	var isBlacklisted = 0;
+	var isSponsor = 0;
+	var gotSaveData = 0;
+	typeProto.onCreate = function() {
+	};
+	pluginProto.Instance = function(type) {
+		this.type = type;
+		this.runtime = type.runtime;
+		idNetRuntime = this.runtime;
+		idNetInst = this;
+		this._document = window.document;
+		this._unsafeWindow = this._document.defaultView;
+	};
+	function ShowLeaderBoardCallback(response) {
+	}
+	var instanceProto = pluginProto.Instance.prototype;
+	instanceProto.onCreate = function()
+	{
+	};
+	instanceProto.onDestroy = function ()
+	{
+	};
+	instanceProto.draw = function(ctx)
+	{
+	};
+	instanceProto.drawGL = function (glw)
+	{
+	};
+	function Cnds() {};
+	Cnds.prototype.isAuthorized = function () {
+		return idNetInst.authorized;
+	};
+	Cnds.prototype.isNotAuthorized = function () {
+		return !idNetInst.authorized;
+	};
+	Cnds.prototype.UserIsAuthorized = function () {
+		return idNetInst.userAuthorized;
+	};
+	Cnds.prototype.UserIsNotAuthorized = function () {
+		return !idNetInst.userAuthorized;
+	};
+	Cnds.prototype.blacklisted = function () {
+		return idNetInst.isBlacklisted;
+	};
+	Cnds.prototype.sponsored = function () {
+		return idNetInst.isSponsor;
+	};
+	Cnds.prototype.dataReady = function () {
+		if (idNetInst.gotSaveData === 1) {
+			idNetInst.gotSaveData = 0;
+			return 1;
+		}
+	};
+	Cnds.prototype.menuVisible = function() {
+		if (window.ID && ID.isVisible()) {
+			return 1;
+		}
+	};
+	pluginProto.cnds = new Cnds();
+	function Acts() {};
+	Acts.prototype.Inititalize = function(appid_) {
+		console.log('init with appid ' + appid_);
+		(function(d, s, id){
+	        var js, fjs = d.getElementsByTagName(s)[0];
+	        if (d.getElementById(id)) {return;}
+	        js = d.createElement(s); js.id = id;
+	        js.src =  document.location.protocol == 'https:' ? "https://scdn.id.net/api/sdk.js" : "http://cdn.id.net/api/sdk.js";
+	        fjs.parentNode.insertBefore(js, fjs);
+	    }(document, 'script', 'id-jssdk'));
+		window.idAsyncInit = function() {
+			ID.Event.subscribe("id.init",function() {
+				window.idnet_autologin = function(response) {
+					if (response != null && response.user != null) {
+						console.log("id.net autologin");
+						idNetInst.idnetUserName = response.user.nickname;
+						idNetInst.userAuthorized = true;
+						ID.login(function(response) {});
+					}
+				}
+				var fjs = document.head.getElementsByTagName('meta')[0];
+				if (document.getElementById('id-autologin')) {
+					var js_auto = document.getElementById('id-autologin');
+				} else {
+					var js_auto = document.createElement('script');
+					js_auto.id = 'id-autologin';
+					js_auto.src = "https://www.id.net/api/user_data/autologin?app_id=" + appid_ + "&callback=window.idnet_autologin";
+					fjs.parentNode.insertBefore(js_auto, fjs);
+				}
+				console.log("id.net initialized");
+				ID.Protection.isBlacklisted(function(blacklisted) {
+					idNetInst.isBlacklisted = blacklisted;
+				});
+				ID.Protection.isSponsor(function(sponsor) {
+					idNetInst.isSponsor = sponsor;
+				});
+			});
+			ID.init({
+				appId : appid_
+			});
+			idNetInst.authorized = true;
+		}
+	};
+	Acts.prototype.RegisterPopup = function() {
+		console.log("open registration menu");
+		if (idNetInst.authorized)
+			ID.register(function (response) {
+				if(response == null) {
+				} else {
+					console.log("Registration complete");
+					idNetInst.idnetUserName = response.authResponse.details.nickname;
+					idNetInst.userAuthorized = true;
+				}
+			});
+	};
+	Acts.prototype.LoginPopup = function() {
+		console.log("open login menu");
+		if (idNetInst.authorized){
+			ID.login(function (response) {
+				if(response == null) {
+				} else {
+					console.log("Login complete");
+					idNetInst.idnetUserName = response.authResponse.details.nickname;
+					idNetInst.userAuthorized = true;
+				}
+			});
+		}
+	};
+	Acts.prototype.ShowLeaderBoard = function(table, mode, highest, allowduplicates) {
+		if (idNetInst.authorized) {
+			console.log('oi')
+			var options = { table: table, mode: mode, highest: !!highest, allowduplicates: !!allowduplicates };
+			ID.GameAPI.Leaderboards.list(options);
+		}
+	};
+	Acts.prototype.SubmitScore = function(score, table, allowduplicates, highest, playername) {
+		if (idNetInst.authorized) {
+			 var score = {
+				table: table,
+				points: score,
+				allowduplicates: !!allowduplicates,
+				highest: !!highest,
+				playername: playername || idNetInst.idnetUserName
+			};
+			ID.GameAPI.Leaderboards.save(score, function(response) {
+				console.log("score submitted", response);
+			});
+		}
+	};
+	Acts.prototype.SubmitProfileImage = function(image_) {
+		if (idNetInst.authorized)
+			ID.submit_image(image_, function(response){
+				console.log("screenshot submitted", response);
+			});
+	};
+	Acts.prototype.AchievementSave = function(achievementTitle_, achievementKey_, overwrite_, allowduplicates_) {
+		if (idNetInst.authorized) {
+			var achievementData = {
+			  achievement: achievementTitle_,
+			  achievementkey: achievementKey_,
+			  overwrite: overwrite_,
+			  allowduplicates: allowduplicates_
+			};
+			ID.GameAPI.Achievements.save(achievementData, function(response) {
+				console.log("achievement saved", response);
+			});
+		}
+	};
+	Acts.prototype.ShowAchievements = function() {
+		if (idNetInst.authorized) {
+			ID.GameAPI.Achievements.list();
+		}
+	};
+	Acts.prototype.OnlineSavesSave = function(key_, value_) {
+		if (idNetInst.authorized) {
+			ID.api('user_data/submit', 'POST', {key: key_, value: value_}, function(response) {
+				console.log("save submitted", response);
+			});
+		}
+	};
+	Acts.prototype.OnlineSavesRemove = function(key_) {
+		if (idNetInst.authorized) {
+			ID.api('user_data/remove', 'POST', {key: key_}, function(response) {
+				console.log("save deleted", response);
+			});
+		}
+	};
+	Acts.prototype.OnlineSavesLoad = function(key_) {
+		if (idNetInst.authorized) {
+			ID.api('user_data/retrieve', 'POST', {key: key_}, function(response) {
+				if(response) {
+					idNetInst.onlineSavesData = response.jsondata;
+					idNetInst.gotSaveData = 1;
+					console.log("save loaded", response);
+				}
+			});
+		}
+	};
+	Acts.prototype.CheckIsBlacklisted = function () {
+		ID.Protection.isBlacklisted(function(blacklisted){
+			console.log("check blacklist called", blacklisted);
+			idNetInst.isBlacklisted = blacklisted;
+		});
+	};
+	Acts.prototype.CheckIsSponsor = function () {
+		ID.Protection.isSponsor(function(sponsor){
+			console.log("check sponser called", sponser);
+			idNetInst.isSponsor = sponsor;
+		});
+	};
+	Acts.prototype.openProfile = function () {
+		ID.openProfile();
+	};
+	pluginProto.acts = new Acts();
+	function Exps() {};
+	Exps.prototype.UserName = function(ret) {
+		if(idNetInst.idnetUserName != undefined) {
+			ret.set_string(idNetInst.idnetUserName);
+		}
+	};
+	Exps.prototype.SessionKey = function(ret) {
+		if(idnetSessionKey != undefined) {
+			ret.set_string(idnetSessionKey);
+		}
+	};
+	Exps.prototype.GateOnlineSavesData = function (ret) {
+		ret.set_string(String(idNetInst.onlineSavesData));
+	};
+	Exps.prototype.GetIsBlacklisted = function(ret) {
+		if(idNetInst.isBlacklisted) {
+			ret.set_int(1);
+		} else {
+			ret.set_int(0);
+		}
+	};
+	Exps.prototype.GetIsSponsor = function(ret) {
+		if(idNetInst.isSponsor) {
+			ret.set_int(1);
+		} else {
+			ret.set_int(0);
+		}
+	};
+	pluginProto.exps = new Exps();
+}());
+;
+;
