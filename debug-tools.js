@@ -94,20 +94,27 @@ function shouldDrawHitbox(inst)
 
 	var blockedTypes = 
 	[
+		't48',  // title on last level
 		't164', // player walking animation
 		't166', // player jetpack location
+		't169', // jetpack when dropped
 		't174', // coin collect animation
 		't175', // broken pieces
+		't177', // small explosion animation
+		't179', // smoke
 		't180', // something on the player
 		't181', // something on the player
 		't182', // something on the player
 		't183', // player dying
+		't186', // water splash animation
 		't187', // broken pieces
 		't190', // BOOST text
+		't196', // thanks for playing text
 		't198', // level directions
 		't219', // motorcycle animation
 		't220', // footstep animation
 		't230', // explosion animation
+		't231', // white water layer
 		't237', // flamethrower animation
 		't243', // camera
 		't246', // level directions
