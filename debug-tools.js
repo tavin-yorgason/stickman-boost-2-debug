@@ -8,40 +8,96 @@ window.debug =
 	fontFamily: "monospace",
 	fontSize: 30,
 	hitboxThickness: 2,
+	playerEditMode: false,
+	playerMoveSpeed: 600,
+}
+
+var debugKeys = {};
+
+function isPlayerEditMoveKey(code)
+{
+	return code === "KeyW" || code === "KeyA" || code === "KeyS" || code === "KeyD" ||
+		code === "ArrowUp" || code === "ArrowLeft" || code === "ArrowDown" || code === "ArrowRight" ||
+		code === "ShiftLeft" || code === "ShiftRight";
 }
 
 window.addEventListener("keydown", function (e)
 {
+	if (isPlayerEditMoveKey(e.code))
+	{
+		debugKeys[e.code] = true;
+		if (debug.playerEditMode)
+		{
+		    e.preventDefault();
+		}
+	}
+
     switch (e.code)
 	{
 		case "F1":
-			debug.slowFix = !debug.slowFix;
-			console.log("Slow fix: " + debug.slowFix);
+            e.preventDefault();
+            if (!e.repeat)
+			{
+				debug.slowFix = !debug.slowFix;
+				console.log("Slow fix: " + debug.slowFix);
+			}
 			break;
         case "F2":
-            debug.hitboxes = !debug.hitboxes;
-			console.log("Hitboxes: " + debug.hitboxes);
+            e.preventDefault();
+            if (!e.repeat)
+            {
+                debug.hitboxes = !debug.hitboxes;
+                console.log("Hitboxes: " + debug.hitboxes);
+            }
             break;
         case "F3":
-            debug.hitboxLabels = !debug.hitboxLabels;
-			console.log("Hitbox labels: " + debug.hitboxLabels);
+            e.preventDefault();
+            if (!e.repeat)
+            {
+                debug.hitboxLabels = !debug.hitboxLabels;
+                console.log("Hitbox labels: " + debug.hitboxLabels);
+            }
             break;
+		case "F4":
+            e.preventDefault();
+			if (!e.repeat)
+				togglePlayerEditMode();
+			break;
 		case "Digit0":
-			debug.zoomMultiplier = 1.0;
-			updateZoom(1);
-			console.log("Zoom multiplier: " + debug.zoomMultiplier);
+            e.preventDefault();
+            if (!e.repeat)
+            {
+                debug.zoomMultiplier = 1.0;
+    			updateZoom(1);
+                console.log("Zoom multiplier: " + debug.zoomMultiplier);
+            }
 			break;
 		case "Minus":
+            e.preventDefault();
 			debug.zoomMultiplier = 0.9;
 			updateZoom();
 			console.log("Zoom multiplier: " + debug.zoomMultiplier);
 			break;
 		case "Equal":
+            e.preventDefault();
 			debug.zoomMultiplier = 1.1;
 			updateZoom();
 			console.log("Zoom multiplier: " + debug.zoomMultiplier);
 			break;
     }
+});
+
+window.addEventListener("keyup", function (e)
+{
+	if (!isPlayerEditMoveKey(e.code))
+		return;
+
+	debugKeys[e.code] = false;
+
+	if (debug.playerEditMode)
+	{
+		e.preventDefault();
+	}
 });
 
 function updateZoom(s = -1)
@@ -62,6 +118,83 @@ function updateZoom(s = -1)
 
 	rt.running_layout.boundScrolling();
 	rt.redraw = true;
+}
+
+function getPlayerAndCameraInstance(rt)
+{
+	if (!rt || !rt.types || !rt.types["t142"] || !rt.types["t243"])
+		return null;
+
+    if (!rt.types["t142"].instances || !rt.types["t243"].instances)
+		return null;
+
+	var player = rt.types["t142"].instances[0];
+    var camera = rt.types["t243"].instances[0];
+	return player && camera ? { player: player, camera: camera } : null;
+}
+
+function togglePlayerEditMode()
+{
+	var rt = cr_getC2Runtime();
+	var instances = getPlayerAndCameraInstance(rt);
+
+	if (!rt || !instances)
+	{
+		console.log("Player edit mode unavailable: player not found");
+		return;
+	}
+
+	if (debug.playerEditMode)
+    {
+		rt.timescale = 1;
+        instances.player.collisionsEnabled = true;
+        debug.playerEditMode = false;
+    }
+	else
+    {
+        rt.timescale = 0;
+        instances.player.collisionsEnabled = false;
+        debug.playerEditMode = true;
+    }
+}
+
+function updatePlayerEditMode(rt)
+{
+	var instances = getPlayerAndCameraInstance(rt);
+	if (!instances)
+		return;
+
+	var player = instances.player;
+	var camera = instances.camera;
+
+	var moveX = 0;
+	var moveY = 0;
+	if (debugKeys["KeyA"] || debugKeys["ArrowLeft"])
+		moveX -= 1;
+	if (debugKeys["KeyD"] || debugKeys["ArrowRight"])
+		moveX += 1;
+	if (debugKeys["KeyW"] || debugKeys["ArrowUp"])
+		moveY -= 1;
+	if (debugKeys["KeyS"] || debugKeys["ArrowDown"])
+		moveY += 1;
+
+	if (!moveX && !moveY)
+		return;
+
+	var dt = rt.dt1 || (1 / 60);
+	var speed = debug.playerMoveSpeed;
+	if (debugKeys["ShiftLeft"] || debugKeys["ShiftRight"])
+		speed *= 2;
+	if (moveX && moveY)
+		speed *= Math.SQRT1_2;
+
+	player.x += moveX * speed * dt;
+	player.y += moveY * speed * dt;
+	player.set_bbox_changed();
+
+    camera.x = player.x;
+    camera.y = player.y;
+    camera.set_bbox_changed();
 }
 
 function addDebugText(ctx, x_loc, y_loc, scale, fps)
@@ -112,7 +245,7 @@ function writeText(ctx, text, x, y)
     ctx.fillText(text, x, y);
 }
 
-function drawAllHitboxes(ctx, instances)
+function drawHitboxes(ctx, instances)
 {
 	for (i = 0, len = instances.length; i < len; i++)
 	{

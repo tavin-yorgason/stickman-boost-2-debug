@@ -1653,6 +1653,12 @@
 			}
 		}
 		this.logic(raf_time);
+
+		/* DEBUG ADDITION */
+		if (debug.playerEditMode)
+			updatePlayerEditMode(this);
+		/* END DEBUG ADDITION */
+
 		if ((this.redraw || this.isCocoonJs) && !this.is_WebGL_context_lost && !this.suspendDrawing && !background_wake)
 		{
 			this.redraw = false;
@@ -1793,7 +1799,7 @@
 		}
         for (i = 0, leni = this.eventsheets_by_index.length; i < leni; i++)
             this.eventsheets_by_index[i].hasRun = false;
-		if (this.running_layout.event_sheet)
+		if (this.running_layout.event_sheet && !debug.playerEditMode)
 			this.running_layout.event_sheet.run();
 		cr.clearArray(this.registered_collisions);
 		this.layout_first_tick = false;
@@ -1962,7 +1968,7 @@
 		
 		/* DEBUG ADDITION */
 		if (debug.hitboxes)
-			this.running_layout.drawHitboxes(this.ctx);
+			this.running_layout.drawAllHitboxes(this.ctx);
 		
 		addDebugText(
 			this.ctx,

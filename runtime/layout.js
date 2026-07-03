@@ -420,7 +420,7 @@
 		}
 	};
 	/* DEBUG ADDITION */
-	Layout.prototype.drawHitboxes = function (ctx)
+	Layout.prototype.drawAllHitboxes = function (ctx)
 	{
 		var i, len, l, px, py, myscale;
 		for (i = 0, len = this.layers.length; i < len; i++)
@@ -442,7 +442,7 @@
 			myscale = l.getScale();
 			ctx.scale(myscale, myscale);
 			ctx.translate(-px, -py);
-			drawAllHitboxes(ctx, l.instances);
+			drawHitboxes(ctx, l.instances);
 			ctx.restore();
 		}
 	};
