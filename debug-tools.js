@@ -1,14 +1,23 @@
 window.debug =
 {
+	fps: true,
+	slowFix: true,
 	hitboxes: false,
 	hitboxLabels: false,
 	zoomMultiplier: 1.0,
+	fontFamily: "monospace",
+	fontSize: 30,
+	hitboxThickness: 2,
 }
 
 window.addEventListener("keydown", function (e)
 {
     switch (e.code)
 	{
+		case "F1":
+			debug.slowFix = !debug.slowFix;
+			console.log("Slow fix: " + debug.slowFix);
+			break;
         case "F2":
             debug.hitboxes = !debug.hitboxes;
 			console.log("Hitboxes: " + debug.hitboxes);
@@ -19,23 +28,23 @@ window.addEventListener("keydown", function (e)
             break;
 		case "Digit0":
 			debug.zoomMultiplier = 1.0;
-			UpdateZoom(1);
+			updateZoom(1);
 			console.log("Zoom multiplier: " + debug.zoomMultiplier);
 			break;
 		case "Minus":
 			debug.zoomMultiplier = 0.9;
-			UpdateZoom();
+			updateZoom();
 			console.log("Zoom multiplier: " + debug.zoomMultiplier);
 			break;
 		case "Equal":
 			debug.zoomMultiplier = 1.1;
-			UpdateZoom();
+			updateZoom();
 			console.log("Zoom multiplier: " + debug.zoomMultiplier);
 			break;
     }
 });
 
-function UpdateZoom(s = -1)
+function updateZoom(s = -1)
 {
 	var rt = cr_getC2Runtime();
 	
@@ -55,28 +64,52 @@ function UpdateZoom(s = -1)
 	rt.redraw = true;
 }
 
-// Shows the current scale if it's not the default value.
-function AddZoomScaleText(caller, scale)
+function addDebugText(ctx, x_loc, y_loc, scale, fps)
 {
-	caller.ctx.save();
+	ctx.save();
 
-    caller.ctx.font = "24px monospace";
-    caller.ctx.textAlign = "right";
-    caller.ctx.textBaseline = "bottom";
+    ctx.font = `${debug.fontSize}px ${debug.fontFamily}`;
+    ctx.textAlign = "right";
+    ctx.textBaseline = "bottom";
+    ctx.lineWidth = debug.fontSize / 6;
+    ctx.strokeStyle = "black";
+    ctx.fillStyle = "white";
 
-    // Black outline
-    caller.ctx.lineWidth = 3;
-    caller.ctx.strokeStyle = "black";
+	var strings = [];
+	if (!debug.slowFix)
+		strings.push("WARNING: Slow fix disabled, game will slow if FPS < 30");
+	if (debug.fps)
+		strings.push("FPS: " + fps);
+	if (scale != 1)
+		strings.push("Zoom: " + scale.toFixed(2));
 
-    // White text
-    caller.ctx.fillStyle = "white";
+    strings.forEach(function(string, index)
+	{
+		if (string.length >= 20)
+		{
+			ctx.save();
+			var fontSize = debug.fontSize * 0.8;
+			ctx.font = `${fontSize}px ${debug.fontFamily}`;
+			ctx.lineWidth = fontSize / 6;
+			ctx.strokeStyle = "black";
+			ctx.fillStyle = "orange";
 
-    var text = scale == 1 ? "" : "Zoom: " + scale.toFixed(2);
+			writeText(ctx, string, x_loc, y_loc - index * (fontSize + 2));
+			ctx.restore();
+		}
+		else
+		{
+    		writeText(ctx, string, x_loc, y_loc - index * (debug.fontSize + 2));
+		}
+    });
 
-    caller.ctx.strokeText(text, caller.width - 10, caller.height - 10);
-    caller.ctx.fillText(text, caller.width - 10, caller.height - 10);
+    ctx.restore();
+}
 
-    caller.ctx.restore();
+function writeText(ctx, text, x, y)
+{
+	ctx.strokeText(text, x, y);
+    ctx.fillText(text, x, y);
 }
 
 function drawAllHitboxes(ctx, instances)
@@ -166,13 +199,13 @@ function setHitboxDrawState(ctx, inst)
 	// Color code hitboxes
 	var state = getPlayerSolidState(inst);
 	if (state === "solid")
-		ctx.strokeStyle = "cyan";  // player cannot pass
+		ctx.strokeStyle = "cyan";   // player cannot pass
 	else if (state === "pass")
 		ctx.strokeStyle = "lime";   // player can pass through
 	else if (state === "disabled")
 		ctx.strokeStyle = "gray";
 
-	ctx.lineWidth = 1;
+	ctx.lineWidth = debug.hitboxThickness;
 
 	// Special cases
 	var typeName = inst.type && inst.type.name.toLowerCase() || "";
@@ -246,7 +279,7 @@ function drawHitbox(ctx, inst)
 
 	if (debug.hitboxLabels)
 	{
-		ctx.font = "12px monospace";
+		ctx.font = `12px ${debug.fontFamily}`;
 		ctx.fillStyle = "yellow";
 		ctx.strokeStyle = "black";
 		ctx.lineWidth = 3;
@@ -256,8 +289,7 @@ function drawHitbox(ctx, inst)
 		var x = inst.bbox.left;
 		var y = inst.bbox.top - 4;
 
-		ctx.strokeText(label, x, y);
-		ctx.fillText(label, x, y);
+		writeText(ctx, label, x, y);
 	}
 
 	ctx.restore();

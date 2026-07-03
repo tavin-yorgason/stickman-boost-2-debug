@@ -1702,10 +1702,17 @@
 				ms_diff = 0;
 			wallDt = ms_diff / 1000.0; // dt measured in seconds
 			this.dt1 = wallDt;
-			if (this.dt1 > 0.5)
-				this.dt1 = 0;
-			else if (this.dt1 > 1 / this.minimumFramerate)
-				this.dt1 = 1 / this.minimumFramerate;
+			
+			/* DEBUG ADDITION */
+			if (!debug.slowFix)
+			{
+				// This logic was always enabled before.
+				if (this.dt1 > 0.5)
+					this.dt1 = 0;
+				else if (this.dt1 > 1 / this.minimumFramerate)
+					this.dt1 = 1 / this.minimumFramerate;
+			}
+			/* END DEBUG ADDITION */
 		}
 		this.last_tick_time = cur_time;
         this.dt = this.dt1 * this.timescale;
@@ -1956,7 +1963,13 @@
 			this.ctx["present"]();
 
 		/* DEBUG ADDITION */
-		AddZoomScaleText(this, this.running_layout.scale);
+		addDebugText(
+			this.ctx,
+			this.width - 10,
+			this.height - 10,
+			this.running_layout.scale,
+			this.fps
+		);
 		/* END DEBUG ADDITION */
 	};
 	Runtime.prototype.drawGL = function ()
