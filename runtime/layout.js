@@ -419,6 +419,34 @@
 			ctx.drawImage(layout_canvas, 0, 0, this.runtime.width, this.runtime.height);
 		}
 	};
+	/* DEBUG ADDITION */
+	Layout.prototype.drawHitboxes = function (ctx)
+	{
+		var i, len, l, px, py, myscale;
+		for (i = 0, len = this.layers.length; i < len; i++)
+		{
+			l = this.layers[i];
+			if (!l.visible || l.opacity <= 0 || !l.instances.length)
+				continue;
+			ctx.save();
+			l.disableAngle = true;
+			px = l.canvasToLayer(0, 0, true, true);
+			py = l.canvasToLayer(0, 0, false, true);
+			l.disableAngle = false;
+			if (this.runtime.pixel_rounding)
+			{
+				px = Math.round(px);
+				py = Math.round(py);
+			}
+			l.rotateViewport(px, py, ctx);
+			myscale = l.getScale();
+			ctx.scale(myscale, myscale);
+			ctx.translate(-px, -py);
+			drawAllHitboxes(ctx, l.instances);
+			ctx.restore();
+		}
+	};
+	/* END DEBUG ADDITION */
 	Layout.prototype.drawGL_earlyZPass = function (glw)
 	{
 		glw.setEarlyZPass(true);
@@ -1464,11 +1492,6 @@
 			this.drawInstance(inst, layer_ctx);
 			last_inst = inst;
 		}
-
-		/* DEBUG ADDITION */
-		drawAllHitboxes(ctx, this.instances);
-		/* END DEBUG ADDITION */
-
 		if (this.useRenderCells)
 			this.last_render_list = instances_to_draw;
 		layer_ctx.restore();

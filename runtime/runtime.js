@@ -1959,10 +1959,11 @@
 	Runtime.prototype.draw = function ()
 	{
 		this.running_layout.draw(this.ctx);
-		if (this.isDirectCanvas)
-			this.ctx["present"]();
-
+		
 		/* DEBUG ADDITION */
+		if (debug.hitboxes)
+			this.running_layout.drawHitboxes(this.ctx);
+		
 		addDebugText(
 			this.ctx,
 			this.width - 10,
@@ -1971,6 +1972,9 @@
 			this.fps
 		);
 		/* END DEBUG ADDITION */
+
+		if (this.isDirectCanvas)
+			this.ctx["present"]();
 	};
 	Runtime.prototype.drawGL = function ()
 	{

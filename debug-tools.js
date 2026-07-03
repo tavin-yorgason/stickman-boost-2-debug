@@ -122,18 +122,18 @@ function drawAllHitboxes(ctx, instances)
 
 function shouldDrawHitbox(inst)
 {
-	if (!debug.hitboxes)
-		return false;
-
 	var blockedTypes = 
 	[
 		't48',  // title on last level
+		't132', // ball shooter
 		't164', // player walking animation
 		't166', // player jetpack location
 		't169', // jetpack when dropped
 		't174', // coin collect animation
 		't175', // broken pieces
+		't176', // ball splatter
 		't177', // small explosion animation
+		't178', // ball splatter
 		't179', // smoke
 		't180', // something on the player
 		't181', // something on the player
