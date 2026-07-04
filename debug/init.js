@@ -40,20 +40,15 @@ window.addEventListener("keydown", function (e)
                 console.log("Hitboxes: " + debug.hitboxes);
             }
             break;
-        case "F3":
-            e.preventDefault();
-            if (!e.repeat)
-            {
-                debug.hitboxLabels = !debug.hitboxLabels;
-                console.log("Hitbox labels: " + debug.hitboxLabels);
-            }
-            break;
-		case "F4":
+		case "F3":
             e.preventDefault();
 			if (!e.repeat)
+            {
 				togglePlayerEditMode();
+                console.log("Player edit mode: " + debug.playerEditMode);
+			}
 			break;
-        case "F5":
+        case "F4":
             e.preventDefault();
             if (!e.repeat)
             {
@@ -61,12 +56,20 @@ window.addEventListener("keydown", function (e)
                 console.log("Checkpoint saved");
             }
             break;
-        case "F6":
+        case "F5":
             e.preventDefault();
             if (!e.repeat)
             {
                 loadCheckpoint();
                 console.log("Checkpoint loaded");
+            }
+            break;
+        case "F6":
+            e.preventDefault();
+            if (!e.repeat)
+            {
+                debug.hitboxLabels = !debug.hitboxLabels;
+                console.log("Hitbox labels: " + debug.hitboxLabels);
             }
             break;
 		case "Digit0":
