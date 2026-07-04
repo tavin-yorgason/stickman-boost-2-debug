@@ -62,9 +62,7 @@ function updatePlayerEditMode(rt)
 
 	player.x += moveX * speed * dt;
 	player.y += moveY * speed * dt;
-	player.set_bbox_changed();
 
     camera.x = player.x;
     camera.y = player.y;
-    camera.set_bbox_changed();
 }

@@ -1,5 +1,6 @@
 window.debug =
 {
+    helpMenu: true,
 	fps: true,
 	slowFix: true,
 	hitboxes: false,
@@ -9,7 +10,21 @@ window.debug =
 	fontSize: 30,
 	hitboxThickness: 2,
 	playerEditMode: false,
-	playerMoveSpeed: 600,
+	playerMoveSpeed: 500,
+}
+
+const KeyCodes =
+{
+    help: "KeyH",
+    slowFix: "F1",
+    hitboxes: "F2",
+    playerEditMode: "F3",
+    saveCheckpoint: "F4",
+    loadCheckpoint: "F5",
+    hitboxLabels: "F6",
+    zoomReset: "Digit0",
+    zoomOut: "Minus",
+    zoomIn: "Equal",
 }
 
 var isKeyDown = {};
@@ -24,7 +39,15 @@ window.addEventListener("keydown", function (e)
 
     switch (e.code)
 	{
-		case "F1":
+        case KeyCodes.help:
+            e.preventDefault();
+            if (!e.repeat)
+            {
+                debug.helpMenu = !debug.helpMenu;
+                console.log("Help menu: " + debug.helpMenu);
+            }
+            break;
+		case KeyCodes.slowFix:
             e.preventDefault();
             if (!e.repeat)
 			{
@@ -32,7 +55,7 @@ window.addEventListener("keydown", function (e)
 				console.log("Slow fix: " + debug.slowFix);
 			}
 			break;
-        case "F2":
+        case KeyCodes.hitboxes:
             e.preventDefault();
             if (!e.repeat)
             {
@@ -40,7 +63,7 @@ window.addEventListener("keydown", function (e)
                 console.log("Hitboxes: " + debug.hitboxes);
             }
             break;
-		case "F3":
+		case KeyCodes.playerEditMode:
             e.preventDefault();
 			if (!e.repeat)
             {
@@ -48,7 +71,7 @@ window.addEventListener("keydown", function (e)
                 console.log("Player edit mode: " + debug.playerEditMode);
 			}
 			break;
-        case "F4":
+        case KeyCodes.saveCheckpoint:
             e.preventDefault();
             if (!e.repeat)
             {
@@ -56,7 +79,7 @@ window.addEventListener("keydown", function (e)
                 console.log("Checkpoint saved");
             }
             break;
-        case "F5":
+        case KeyCodes.loadCheckpoint:
             e.preventDefault();
             if (!e.repeat)
             {
@@ -64,7 +87,7 @@ window.addEventListener("keydown", function (e)
                 console.log("Checkpoint loaded");
             }
             break;
-        case "F6":
+        case KeyCodes.hitboxLabels:
             e.preventDefault();
             if (!e.repeat)
             {
@@ -72,7 +95,7 @@ window.addEventListener("keydown", function (e)
                 console.log("Hitbox labels: " + debug.hitboxLabels);
             }
             break;
-		case "Digit0":
+		case KeyCodes.zoomReset:
             e.preventDefault();
             if (!e.repeat)
             {
@@ -81,13 +104,13 @@ window.addEventListener("keydown", function (e)
                 console.log("Zoom multiplier: " + debug.zoomMultiplier);
             }
 			break;
-		case "Minus":
+		case KeyCodes.zoomOut:
             e.preventDefault();
 			debug.zoomMultiplier = 0.9;
 			updateZoom();
 			console.log("Zoom multiplier: " + debug.zoomMultiplier);
 			break;
-		case "Equal":
+		case KeyCodes.zoomIn:
             e.preventDefault();
 			debug.zoomMultiplier = 1.1;
 			updateZoom();
@@ -98,12 +121,9 @@ window.addEventListener("keydown", function (e)
 
 window.addEventListener("keyup", function (e)
 {
-	if (!isPlayerEditMoveKey(e.code))
-		return;
-
 	isKeyDown[e.code] = false;
 
-	if (debug.playerEditMode)
+	if (debug.playerEditMode && isPlayerEditMoveKey(e.code))
 	{
 		e.preventDefault();
 	}

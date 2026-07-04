@@ -1977,6 +1977,9 @@
 			this.running_layout.scale,
 			this.fps
 		);
+		
+		if (debug.helpMenu)
+			showHelpMenu(this.ctx);
 		/* END DEBUG ADDITION */
 
 		if (this.isDirectCanvas)
